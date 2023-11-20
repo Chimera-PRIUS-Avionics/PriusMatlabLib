@@ -1,34 +1,30 @@
-classdef ADXL357Addon < matlabshared.addon.LibraryBase
+classdef MPU6050Addon < matlabshared.addon.LibraryBase
     properties(Access = private, Constant = true)
         ADXL357_ADDON_CREATE = hex2dec('01')
         ADXL357_ADDON_READ   = hex2dec('02')
         ADXL357_ADDON_DELETE = hex2dec('03')
 
         MAX_NUMBER_SENSORS = 2
-
-        Range_40_G =  bin2dec('11')
-        Range_20_G =  bin2dec('10')
-        Range_10_G =  bin2dec('01')
     end
 
     properties(Access = protected, Constant = true)
-        LibraryName = 'Sensors/ADXL357Addon'
+        LibraryName = 'Sensors/MPU6050Addon'
         DependentLibraries = {}
         LibraryHeaderFiles = {}
-        CppHeaderFile =  {fullfile(PRIUSMatlabLib.getInstallationLocation("ADXL357"), 'ADXL357.h'), ...
-                          fullfile(arduinoio.FilePath(mfilename('fullpath')), 'src', 'ADXL357Addon.h')}
-        CppClassName = 'ADXL357Addon'
+        CppHeaderFile = {fullfile(PRIUSMatlabLib.getInstallationLocation("mpu6050"), 'mpu6050-master', 'src', 'MPU6050.h'), ...
+                        fullfile(arduinoio.FilePath(mfilename('fullpath')), 'src', 'MPU6050Addon.h')}
+        CppClassName = 'MPU6050Addon'
     end
 
     properties(Access = private)
         SensorIdx;
         Range;
-        ResourceOwner = 'Sensors/ADXL357Addon';
+        ResourceOwner = 'Sensors/MPU6050Addon';
     end
     
 
     methods
-        function obj = ADXL357Addon(parentObj, isHigherAddress, range)
+        function obj = ADXL357Addon(parentObj)
                 obj.Parent = parentObj;
 
                 count = getResourceCount(obj.Parent,obj.ResourceOwner);
