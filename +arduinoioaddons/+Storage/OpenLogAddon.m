@@ -3,7 +3,7 @@ classdef OpenLogAddon < matlabshared.addon.LibraryBase
         OPENLOG_ADDON_CREATE = hex2dec('01')
         OPENLOG_ADDON_DELETE = hex2dec('02')
         OPENLOG_ADDON_READ_FILE   = hex2dec('03')
-        OPENLOG_ADDON_READ_CHAR = hex2dec('04')
+        OPENLOG_ADDON_FILE_SIZE = hex2dec('04')
         OPENLOG_ADDON_WRITE_FILE   = hex2dec('05')
         OPENLOG_ADDON_WRITE_STRING = hex2dec('06')
         OPENLOG_ADDON_WRITE_LINE = hex2dec('07')
@@ -16,7 +16,7 @@ classdef OpenLogAddon < matlabshared.addon.LibraryBase
     properties(Access = protected, Constant = true)
         LibraryName = 'Storage/OpenLog'
         DependentLibraries = {}
-        LibraryHeaderFiles = {'ADXL357/ADXL357.h'}
+        LibraryHeaderFiles = {}
         CppHeaderFile =  fullfile(arduinoio.FilePath(mfilename('fullpath')), 'src', 'OpenLogAddon.h')
         CppClassName = 'OpenLogAddon'
     end
@@ -91,7 +91,14 @@ classdef OpenLogAddon < matlabshared.addon.LibraryBase
     end
 
     methods(Access = public)
-        function readFile(obj, filename)
+        function [text] = readFile(obj, filename, options)
+            arguments
+               obj
+               filename char
+               options.start (1,1)  int32 = 0
+               options.fileLength (1,1) int32 = -1
+               options.readingLength (1,1) int32 = -1
+            end
             
             cmdID = obj.OPENLOG_ADDON_READ_FILE;
             
@@ -100,28 +107,56 @@ classdef OpenLogAddon < matlabshared.addon.LibraryBase
                     error('Sparkfun:OpenLog:ParameterError', 'Maximum lenght of filename (= %d) has been reached.', 12)
                 end
 
-                data = [obj.OpenLogID, length(filename), uint8(filename)];
-                sendCommand(obj, obj.LibraryName, cmdID, data);
+                if(options.fileLength == -1)
+                    options.fileLength = obj.getFileSize(filename);
+                end
 
+                if(options.readingLength == -1)
+                    options.readingLength = options.fileLength - options.start;
+                end
+
+                thisTimeReadingLength = uint8(255);
+
+                if(options.readingLength >= 255)
+                    thisTimeReadingLength = uint8(255);
+                else
+                    thisTimeReadingLength = uint8(options.readingLength);
+                end
+
+                if(options.readingLength == 0)
+                    text = '';
+                    return;
+                end
+
+                remainLength = options.readingLength - int32(thisTimeReadingLength);
+
+                data = [obj.OpenLogID, typecast(options.start, 'uint8'), uint8(thisTimeReadingLength), uint8(length(filename)), uint8(filename)];
+                    text = char(uint8(sendCommand(obj, obj.LibraryName, cmdID, data))');
+                remain = obj.readFile(filename, ...
+                        fileLength = options.fileLength, ...
+                        start = options.start + int32(thisTimeReadingLength), ...
+                        readingLength = remainLength);
+
+                text = [text, remain];
                 obj.status = 'reading';
             catch e
                 throwAsCaller(e);
             end
         end
 
-        function [c] = readChar(obj)
+        function  [size] = getFileSize(obj, filename)
             
-            cmdID = obj.OPENLOG_ADDON_READ_CHAR;
+            cmdID = obj.OPENLOG_ADDON_FILE_SIZE;
             
             try
-                if(obj.status ~= 'reading')
-                    error('Sparkfun:OpenLog:RuntimeError', 'Current stauts (= %s) not support reading file.', obj.status)
+                if(length(filename) > 12)
+                    error('Sparkfun:OpenLog:ParameterError', 'Maximum lenght of filename (= %d) has been reached.', 12)
                 end
 
-                data = [obj.OpenLogID];
-                val = sendCommand(obj, obj.LibraryName, cmdID, data);
-                c = char(uint8(val));
+                data = [obj.OpenLogID, length(filename), uint8(filename)];
+                size = typecast(uint8(sendCommand(obj, obj.LibraryName, cmdID, data)), 'int32');
 
+                obj.status = 'reading';
             catch e
                 throwAsCaller(e);
             end
