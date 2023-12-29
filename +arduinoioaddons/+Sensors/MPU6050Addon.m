@@ -10,9 +10,8 @@ classdef MPU6050Addon < matlabshared.addon.LibraryBase
     properties(Access = protected, Constant = true)
         LibraryName = 'Sensors/MPU6050Addon'
         DependentLibraries = {}
-        LibraryHeaderFiles = {}
-        CppHeaderFile = {fullfile(PRIUSMatlabLib.getInstallationLocation("mpu6050"), 'mpu6050-master', 'src', 'MPU6050.h'), ...
-                        fullfile(arduinoio.FilePath(mfilename('fullpath')), 'src', 'MPU6050Addon.h')}
+        LibraryHeaderFiles = 'mpu6050/MPU6050.h'
+        CppHeaderFile = fullfile(arduinoio.FilePath(mfilename('fullpath')), 'src', 'MPU6050Addon.h')
         CppClassName = 'MPU6050Addon'
     end
 

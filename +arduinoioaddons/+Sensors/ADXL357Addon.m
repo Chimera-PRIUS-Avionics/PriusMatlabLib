@@ -14,9 +14,8 @@ classdef ADXL357Addon < matlabshared.addon.LibraryBase
     properties(Access = protected, Constant = true)
         LibraryName = 'Sensors/ADXL357Addon'
         DependentLibraries = {}
-        LibraryHeaderFiles = {}
-        CppHeaderFile =  {fullfile(PRIUSMatlabLib.getInstallationLocation("ADXL357"), 'ADXL357.h'), ...
-                          fullfile(arduinoio.FilePath(mfilename('fullpath')), 'src', 'ADXL357Addon.h')}
+        LibraryHeaderFiles = 'ADXL357/ADXL357.h'
+        CppHeaderFile = fullfile(arduinoio.FilePath(mfilename('fullpath')), 'src', 'ADXL357Addon.h')
         CppClassName = 'ADXL357Addon'
     end
 

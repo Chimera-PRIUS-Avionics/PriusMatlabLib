@@ -21,13 +21,16 @@ opts = matlab.addons.toolbox.ToolboxOptions('./',"PRIUSMatlabLib");
 
 opts.ToolboxName = "PRIUS Matlab Lib";
 
+opts.ToolboxVersion = version_num;
+
 opts.SupportedPlatforms.Win64 = true;
 opts.SupportedPlatforms.Maci64 = true;
 opts.SupportedPlatforms.Glnxa64 = true;
 opts.SupportedPlatforms.MatlabOnline = true;
 
-opts.ToolboxFiles = {'./+arduinoioaddons',
-                     './ADXL357_Example.m'};
+opts.ToolboxFiles = {'./+arduinoioaddons'};
+
+opts.ToolboxGettingStartedGuide = './QuickStart.mlx';
 
 opts.OutputFile = "PRIUS Matlab Lib";
 
