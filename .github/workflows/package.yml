@@ -25,6 +25,7 @@ jobs:
         uses: softprops/action-gh-release@v1
         # if: startsWith(github.ref, 'refs/tags/')
         with:
+          tag_name: ${{ steps.tag.outputs.release_tag }}
           files: |
             PRIUS Matlab Lib.mltbx
             Release.txt
