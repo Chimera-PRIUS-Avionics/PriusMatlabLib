@@ -28,7 +28,8 @@ opts.SupportedPlatforms.Maci64 = true;
 opts.SupportedPlatforms.Glnxa64 = true;
 opts.SupportedPlatforms.MatlabOnline = true;
 
-opts.ToolboxFiles = {'./+arduinoioaddons'};
+opts.ToolboxFiles = {'./+arduinoioaddons', ...
+                     './QuickStart.mlx'};
 
 opts.ToolboxGettingStartedGuide = './QuickStart.mlx';
 
