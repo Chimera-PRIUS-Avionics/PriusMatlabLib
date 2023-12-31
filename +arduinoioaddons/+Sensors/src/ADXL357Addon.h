@@ -1,11 +1,18 @@
 #include "LibraryBase.h"
 #include "ADXL357.h"
 
+#include <inttypes.h>
+
 #define MAX_NUMBER_SENSORS 2
 
 #define ADXL357_ADDON_CREATE           0x01
 #define ADXL357_ADDON_READ             0x02
 #define ADXL357_ADDON_DELETE           0x03
+
+const char DEBUG_MSG_ADXL357_CREATE_SensorIdxExisted[] PROGMEM = "sensors[%d] existed\n";
+const char DEBUG_MSG_ADXL357_CREATE[] PROGMEM = "sensors[%d] = new ADXL357(%d);\n"
+                                                "sensors[sensorIdx]->setRange(%"PRId8");\n"
+                                                "sensors[sensorIdx]->begin();\n";
 
 class ADXL357Addon : public LibraryBase
 {
@@ -29,6 +36,29 @@ public:
     }
     
 public:
+    int8_t createADXL357(bool isHigherAddress, adxl357_range_t range){
+        int8_t sensorIdx = -1;
+
+        if(!isHigherAddress){ // Lower Address
+            sensorIdx = 0;
+        }else // Higher Address
+        {
+            sensorIdx = 1;
+        }
+
+        if(sensors[sensorIdx]){
+            debugPrint(DEBUG_MSG_ADXL357_CREATE_SensorIdxExisted, sensorIdx);
+            return sensorIdx;
+        }
+
+        sensors[sensorIdx] = new ADXL357(isHigherAddress);
+        sensors[sensorIdx]->setRange(range);
+        sensors[sensorIdx]->begin();
+
+        debugPrint(DEBUG_MSG_ADXL357_CREATE, sensorIdx, isHigherAddress, static_cast<uint8_t>(range));
+        return sensorIdx;
+    }
+
     void commandHandler(byte cmdID, byte* dataIn, unsigned int payload_size)
     {
         switch (cmdID)
@@ -36,28 +66,13 @@ public:
             case ADXL357_ADDON_CREATE: {
                 bool isHigherAddress = static_cast<bool>(dataIn[0]);
 
+                int8_t rangei = dataIn[1];
+
                 adxl357_range_t range = static_cast<adxl357_range_t>(dataIn[1]);
 
-                int8_t sensorIdx = -1;
+                int8_t sensorIdx = createADXL357(isHigherAddress, range);
 
-                if(!isHigherAddress){ // Lower Address
-                    sensorIdx = 0;
-                }else // Higher Address
-                {
-                    sensorIdx = 1;
-                }
-
-                if(sensors[sensorIdx]){
-                    sendResponseMsg(cmdID, static_cast<int8_t>(-1), 1);
-                    break;
-                }
-
-                sensors[sensorIdx] = new ADXL357(isHigherAddress);
-                
-                sensors[sensorIdx]->setRange(range);
-                sensors[sensorIdx]->begin();
-
-                sendResponseMsg(cmdID, static_cast<uint8_t>(sensorIdx), 1);
+                sendResponseMsg(cmdID, reinterpret_cast<byte *>(&sensorIdx), 1);
                 break;
             }
             
@@ -89,22 +104,7 @@ public:
 
                 double scale;
 
-                switch (range)
-                {
-                case adxl357_range_t::Range_40_G:
-                    scale = ADXL357_SCL_40G;
-                    break;
-                case adxl357_range_t::Range_20_G:
-                    scale = ADXL357_SCL_20G;
-                    break;
-                case adxl357_range_t::Range_10_G:
-                    scale = ADXL357_SCL_10G;
-                    break;
-                
-                default:
-                    scale = 0;
-                    break;
-                }
+                scale = sensors[sensorIdx]->getScale();
 
                 float xf, yf, zf;
 

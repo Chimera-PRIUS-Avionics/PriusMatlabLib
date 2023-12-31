@@ -76,7 +76,7 @@ classdef ADXL357Addon < matlabshared.addon.LibraryBase
             end
 
             data = [isHigherAddress, obj.Range];
-            val = typecast(uint8(sendCommand(obj, obj.LibraryName, cmdID, data)), 'int8');
+            val = typecast(uint8(sendCommand(obj, obj.LibraryName, cmdID, uint8(data))), 'int8');
             if(val)
                 isCreated = false;
                 return;    
