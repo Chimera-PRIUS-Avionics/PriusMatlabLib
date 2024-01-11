@@ -4,6 +4,8 @@ classdef ADXL357Addon < matlabshared.addon.LibraryBase
         ADXL357_ADDON_READ   = hex2dec('02')
         ADXL357_ADDON_DELETE = hex2dec('03')
 
+        ADXL357_ADDON_READ_N = hex2dec('04')
+
         MAX_NUMBER_SENSORS = 2
 
         Range_40_G =  bin2dec('11')
@@ -109,6 +111,26 @@ classdef ADXL357Addon < matlabshared.addon.LibraryBase
                 x = val(1);
                 y = val(2);
                 z = val(3);
+            catch e
+                throwAsCaller(e);
+            end
+        end
+
+        function [x, y, z, n] = readN(obj)
+            
+            cmdID = obj.ADXL357_ADDON_READ_N;
+            
+            try
+                data = [obj.SensorIdx];
+                val = sendCommand(obj, obj.LibraryName, cmdID, data);
+
+                n = val(1);
+                data32 = single(typecast(uint8(val(5:end)), 'int32'));
+
+                x  = data32(1:n/3);
+                y  = data32(33:33 + n/3 - 1);
+                z  = data32(65:65 + n/3 - 1);
+
             catch e
                 throwAsCaller(e);
             end
