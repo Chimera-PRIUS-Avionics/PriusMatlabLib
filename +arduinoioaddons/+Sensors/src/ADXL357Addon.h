@@ -12,6 +12,7 @@
 #define ADXL357_ADDON_READ_N             0x04
 
 const char ERROR_MSG_ADXL357_SET_RangeFailed[] PROGMEM = "ADXL 357 Set Range Failed";
+const char  ERROR_MSG_ADXL357_SET_ODRFailed[] PROGMEM = "ADXL 357 Set ODR Failed";
 const char DEBUG_MSG_ADXL357_CREATE_SensorIdxExisted[] PROGMEM = "sensors[%d] existed\n";
 const char DEBUG_MSG_ADXL357_CREATE[] PROGMEM = "sensors[%d] = new ADXL357(%d);\n"
                                                 "sensors[sensorIdx]->setRange(%" PRId8 ");\n"
@@ -57,7 +58,7 @@ public:
     }
     
 public:
-    int8_t createADXL357(bool isHigherAddress, adxl357_range_t range){
+    int8_t createADXL357(bool isHigherAddress, adxl357_range_t range, adxl357_filter_t ODR){
         int8_t sensorIdx = -1;
 
         if(!isHigherAddress){ // Lower Address
@@ -82,6 +83,15 @@ public:
             debugPrint(ERROR_MSG_ADXL357_SET_RangeFailed);
             while(1);
         }
+
+        if(!sensors[sensorIdx]->setFilter(
+            static_cast<adxl357_filter_t>(
+            static_cast<uint8_t>(adxl357_filter_t::HPF_CORNER_NO_HPF)
+            | static_cast<uint8_t>(ODR))
+            )){
+                debugPrint(ERROR_MSG_ADXL357_SET_ODRFailed);
+                while(1);
+            }
 
         sensors[sensorIdx]->setMode(true);
 
@@ -113,7 +123,9 @@ public:
 
                 adxl357_range_t range = static_cast<adxl357_range_t>(dataIn[1]);
 
-                int8_t sensorIdx = createADXL357(isHigherAddress, range);
+                adxl357_filter_t ODR = static_cast<adxl357_filter_t>(dataIn[2]);
+
+                int8_t sensorIdx = createADXL357(isHigherAddress, range, ODR);
 
                 sendResponseMsg(cmdID, reinterpret_cast<byte *>(&sensorIdx), 1);
                 break;
