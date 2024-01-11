@@ -9,6 +9,7 @@
 #define ADXL357_ADDON_READ             0x02
 #define ADXL357_ADDON_DELETE           0x03
 
+const char ERROR_MSG_ADXL357_SET_RangeFailed[] PROGMEM = "ADXL 357 Set Range Failed";
 const char DEBUG_MSG_ADXL357_CREATE_SensorIdxExisted[] PROGMEM = "sensors[%d] existed\n";
 const char DEBUG_MSG_ADXL357_CREATE[] PROGMEM = "sensors[%d] = new ADXL357(%d);\n"
                                                 "sensors[sensorIdx]->setRange(%"PRId8");\n"
@@ -52,8 +53,17 @@ public:
         }
 
         sensors[sensorIdx] = new ADXL357(isHigherAddress);
-        sensors[sensorIdx]->setRange(range);
         sensors[sensorIdx]->begin();
+
+
+        sensors[sensorIdx]->setMode(false);
+
+        if(!sensors[sensorIdx]->setRange(range)){
+            debugPrint(ERROR_MSG_ADXL357_SET_RangeFailed);
+            while(1);
+        }
+
+        sensors[sensorIdx]->setMode(true);
 
         debugPrint(DEBUG_MSG_ADXL357_CREATE, sensorIdx, isHigherAddress, static_cast<uint8_t>(range));
         return sensorIdx;
